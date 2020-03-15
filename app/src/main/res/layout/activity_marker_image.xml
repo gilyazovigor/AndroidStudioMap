@@ -16,7 +16,7 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/fabAddPhoto"
         android:layout_width="66dp"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
@@ -32,7 +32,7 @@
         app:srcCompat="@android:drawable/ic_menu_camera" />
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/iwContent"
         android:layout_width="fill_parent"
         android:layout_height="390dp"
         android:layout_marginLeft="10dp"
@@ -41,7 +41,7 @@
         android:scaleType="center" />
 
     <EditText
-        android:id="@+id/textViewPosition"
+        android:id="@+id/edtCoordinates"
         android:layout_width="fill_parent"
         android:layout_height="46dp"
         android:layout_marginLeft="10dp"
