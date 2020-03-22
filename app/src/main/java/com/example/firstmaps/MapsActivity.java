@@ -53,24 +53,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-        //-------------------
         mMap.setOnMapLongClickListener(this);
         mMap.setOnMarkerClickListener(this);
 
     }
 
-    //-------------------
 
     @Override
     public void onMapLongClick(LatLng latLng) {
-        // mMap.addMarker(new MarkerOptions().position(latLng).title(latLng.toString()));
-        // addMarker(new MarkerOptions().position(latLng));
         MarkerOptions mo = new MarkerOptions()
                 .position(latLng)
                 .title("You are here")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
         mMap.addMarker(mo);
-        Intent intent = new Intent(this, MarkerImageActivity.class);
         saveMarkerToDB(mo);
     }
 
@@ -95,13 +90,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         currentMarker = marker;
-        //startActivity(intent);
         startActivityForResult(intent, IMAGE_ACTIVITY);
         return true;
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // в data приходит null
         if (requestCode == IMAGE_ACTIVITY && resultCode == Activity.RESULT_OK) {
             //currentMarker.setTag(getIntent().getStringExtra("photoPath"));
             currentMarker.setTag(data.getStringExtra("photoPath"));
