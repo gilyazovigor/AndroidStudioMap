@@ -1,6 +1,8 @@
 package com.example.firstmaps;
 
 import androidx.fragment.app.FragmentActivity;
+
+import android.app.Activity;
 import android.os.Bundle;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -18,7 +20,10 @@ import android.content.Intent;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener{
 
+    private static final int IMAGE_ACTIVITY = 23;
     private GoogleMap mMap;
+    private Marker currentMarker;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,8 +83,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public boolean onMarkerClick(Marker marker){
         // TODO: new Activity - open galerea/camera
         Intent intent = new Intent(this, MarkerImageActivity.class);
-        startActivity(intent);
+
+        intent.putExtra("latitude", marker.getPosition().latitude);
+        intent.putExtra("longitude", marker.getPosition().longitude);
+        Object markerTag = marker.getTag();
+        if (markerTag != null) {
+            intent.putExtra("photoPath", markerTag.toString());
+        }
+        else {
+            intent.putExtra("photoPath", "");
+        }
+
+        currentMarker = marker;
+        //startActivity(intent);
+        startActivityForResult(intent, IMAGE_ACTIVITY);
         return true;
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // в data приходит null
+        if (requestCode == IMAGE_ACTIVITY && resultCode == Activity.RESULT_OK) {
+            //currentMarker.setTag(getIntent().getStringExtra("photoPath"));
+            currentMarker.setTag(data.getStringExtra("photoPath"));
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
 }

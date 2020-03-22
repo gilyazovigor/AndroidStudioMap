@@ -33,23 +33,24 @@
 
     <ImageView
         android:id="@+id/iwContent"
-        android:layout_width="fill_parent"
-        android:layout_height="390dp"
+        android:layout_width="match_parent"
+        android:layout_height="370dp"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:layout_marginTop="128dp"
-        android:scaleType="center" />
+        android:layout_marginTop="148dp"
+        android:scaleType="fitCenter" />
 
     <EditText
         android:id="@+id/edtCoordinates"
         android:layout_width="fill_parent"
-        android:layout_height="46dp"
+        android:layout_height="66dp"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
 
         android:layout_marginTop="70dp"
         android:textSize="16sp"
         android:textStyle="normal"
+        android:background="@null"
         app:layout_anchorGravity="bottom|center" />
 
     <Button

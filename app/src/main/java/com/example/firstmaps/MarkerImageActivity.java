@@ -24,6 +24,8 @@ import java.sql.Time;
 import java.util.Calendar;
 import java.util.Date;
 import android.app.Activity;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 import java.time.LocalDateTime;
@@ -35,9 +37,7 @@ public class MarkerImageActivity extends AppCompatActivity {
 
     private static final int TAKE_PICTURE = 111;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 666;
-    private static Uri imageUri;
     String currentPhotoPath;
-    //Marker mapMarker;
     private String root = Environment.getExternalStorageDirectory().toString() + "/DCIM/Camera";
 
 
@@ -45,6 +45,19 @@ public class MarkerImageActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_marker_image);
+
+        EditText et = findViewById(R.id.edtCoordinates);
+        et.setText("[Широта; Долгота]: " +
+                getIntent().getDoubleExtra("latitude",0.00 ) + "; " +
+                getIntent().getDoubleExtra("longitude",0.00 ));
+
+        String photoPath = getIntent().getStringExtra("photoPath");
+        if (!photoPath.isEmpty())
+        {
+            ImageView iv = findViewById(R.id.iwContent);
+            iv.setImageURI(Uri.parse(photoPath));
+            currentPhotoPath = photoPath;
+        }
 
         //кнопка добавления фото
         FloatingActionButton myFab = (FloatingActionButton) findViewById(R.id.fabAddPhoto);
@@ -54,13 +67,26 @@ public class MarkerImageActivity extends AppCompatActivity {
             }
         });
 
+        //Save
+        Button btSave = findViewById(R.id.btSave);
+        btSave.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                saveAndExit(v);
+            }
+        });
+
     }
 
     public void takePhoto(View view) {
-        getPermissions();
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         startActivityForResult(intent, TAKE_PICTURE);
+    }
 
+    public void saveAndExit(View view) {
+        Intent intent = new Intent(this, MapsActivity.class);
+        intent.putExtra("photoPath", currentPhotoPath);
+        setResult(RESULT_OK, intent);
+        this.finish(); // closing activity
     }
 
 
@@ -68,9 +94,8 @@ public class MarkerImageActivity extends AppCompatActivity {
         if (requestCode == TAKE_PICTURE && resultCode == Activity.RESULT_OK) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
             savePhoto(photo);
-            ImageView iw = findViewById(R.id.iwContent);
-        //    iw.setImageURI(Uri.parse(mapMarker.filePath));
-            iw.setImageURI(Uri.parse(currentPhotoPath));
+            ImageView iv = findViewById(R.id.iwContent);
+            iv.setImageURI(Uri.parse(currentPhotoPath));
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -104,28 +129,7 @@ public class MarkerImageActivity extends AppCompatActivity {
             out.flush();
             out.close();
             currentPhotoPath = file.getAbsolutePath();
-        //    images.add(file.getAbsolutePath());
-        //    Log.d(TAG,"Путь к изображению "+file.getAbsolutePath());
 
-
-            /*
-            MapsActivity.realm.beginTransaction();
-            Paths path = new Paths();
-            path.setPathToPhoto(file.getAbsolutePath());
-            MapsActivity.realm.copyToRealm(path);
-            Log.d(TAG,"Добавили путь в базу");
-            Log.d(TAG,"Lat " + lat);
-            Log.d(TAG,"Lng " + lng);
-            Log.d(TAG,"Добавили путь в базу");
-            Mark mark = MapsActivity.realm.where(Mark.class)
-                    .equalTo("lat", Double.valueOf( lat))
-                    .equalTo("lng", lng)
-                    .findFirst();
-            Log.d(TAG,"Прикрепляем изображение к выбранной метке lat"+mark.getLat()+" lng "+mark.getLng());
-            mark.addPath(path);
-            Log.d(TAG,"Изображение прикреплено");
-            MapsActivity.realm.commitTransaction();
-             */
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -133,17 +137,5 @@ public class MarkerImageActivity extends AppCompatActivity {
 
     }
 
-
-    /* Права на создание файла getPermissions */
-    private void getPermissions(){
-        int MY_WRITE_EXTERNAL_REQUEST  = 1;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_WRITE_EXTERNAL_REQUEST);
-            }
-        }
-    }
 
 }
