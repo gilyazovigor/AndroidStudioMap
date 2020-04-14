@@ -12,6 +12,8 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+
+import com.example.firstmaps.Dao.MyMarker;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -37,26 +39,35 @@ public class MarkerImageActivity extends AppCompatActivity {
 
     private static final int TAKE_PICTURE = 111;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 666;
-    String currentPhotoPath;
-
+    private MarkerDB markerDB;
+    private MyMarker currentMarker = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_marker_image);
+        markerDB = MarkerApp.getInstance().getDatabase();
 
+        double latitude = getIntent().getDoubleExtra("latitude",0.00 );
+        double longitude = getIntent().getDoubleExtra("longitude",0.00 );
+
+        if(currentMarker == null) {
+            currentMarker = markerDB.markerDao().findByParams(latitude, longitude);
+        }
+
+        // Заполняем едитбокс с координатами
         EditText et = findViewById(R.id.edtCoordinates);
-        et.setText("[Широта; Долгота]: " +
-                getIntent().getDoubleExtra("latitude",0.00 ) + "; " +
-                getIntent().getDoubleExtra("longitude",0.00 ));
+        et.setText("[Широта; Долгота]: " + latitude + "; " + longitude);
 
-        String photoPath = getIntent().getStringExtra("photoPath");
-        if (!photoPath.isEmpty())
+
+        // Добавляем фото
+        String photoPath = currentMarker.getFilePath();
+        if (photoPath != null)
         {
             ImageView iv = findViewById(R.id.iwContent);
             iv.setImageURI(Uri.parse(photoPath));
-            currentPhotoPath = photoPath;
         }
+
 
         // Создаем обработчик события нажатия кнопки добавления фото
         FloatingActionButton myFab = findViewById(R.id.fabAddPhoto);
@@ -80,25 +91,21 @@ public class MarkerImageActivity extends AppCompatActivity {
     }
 
     public void takePhoto(View view) {
-        //Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        //startActivityForResult(intent, TAKE_PICTURE);
         startAcivity();
     }
 
     public void saveAndExit(View view) {
         Intent intent = new Intent(this, MapsActivity.class);
-        intent.putExtra("photoPath", currentPhotoPath);
         setResult(RESULT_OK, intent);
+        markerDB.markerDao().update(currentMarker);
         this.finish(); // closing activity
     }
 
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == TAKE_PICTURE && resultCode == Activity.RESULT_OK) {
-            //Bitmap photo = (Bitmap) data.getExtras().get("data");
-            //savePhoto(photo);
             ImageView iv = findViewById(R.id.iwContent);
-            iv.setImageURI(Uri.parse(currentPhotoPath));
+            iv.setImageURI(Uri.parse(currentMarker.getFilePath()));
             findViewById(R.id.btSave).setEnabled(true);
         }
         super.onActivityResult(requestCode, resultCode, data);
@@ -117,8 +124,7 @@ public class MarkerImageActivity extends AppCompatActivity {
                 storageDir      /* directory */
         );
 
-        // Save a file: path for use with ACTION_VIEW intents
-        currentPhotoPath = image.getAbsolutePath();
+        currentMarker.setFilePath(image.getAbsolutePath());
         return image;
     }
 

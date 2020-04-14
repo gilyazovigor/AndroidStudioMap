@@ -4,6 +4,8 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.app.Activity;
 import android.os.Bundle;
+
+import com.example.firstmaps.Dao.MyMarker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -12,9 +14,10 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import java.util.ArrayList;
+
 import android.content.Intent;
 
+import java.util.List;
 
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
@@ -23,6 +26,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int IMAGE_ACTIVITY = 23;
     private GoogleMap mMap;
     private Marker currentMarker;
+    private MarkerDB markerDB;
 
 
     @Override
@@ -33,6 +37,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        markerDB = MarkerApp.getInstance().getDatabase();
     }
 
 
@@ -50,14 +55,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
+        // (just for moving Camera)
         LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
         mMap.setOnMapLongClickListener(this);
         mMap.setOnMarkerClickListener(this);
 
+        RefreshMarkers(googleMap);
     }
 
+    private void RefreshMarkers(GoogleMap googleMap){
+        List<MyMarker> mapMarkers = markerDB.markerDao().getAll();
+        mapMarkers.forEach(mapMarker -> {
+            currentMarker = mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(mapMarker.getLatitude(),mapMarker.getLongitude()))
+                    .anchor(0.5f, 0.5f)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+        });
+    }
 
     @Override
     public void onMapLongClick(LatLng latLng) {
@@ -66,12 +82,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .title("You are here")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
         mMap.addMarker(mo);
-        saveMarkerToDB(mo);
+        saveMarkerToDB(latLng);
     }
 
 
-    void saveMarkerToDB(MarkerOptions markerOptions){
-        // TODO: saving to DB
+    void saveMarkerToDB(LatLng latLng){
+        markerDB.markerDao().insert(new MyMarker(latLng.latitude, latLng.longitude));
     }
 
     @Override
@@ -81,24 +97,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         intent.putExtra("latitude", marker.getPosition().latitude);
         intent.putExtra("longitude", marker.getPosition().longitude);
-        Object markerTag = marker.getTag();
-        if (markerTag != null) {
-            intent.putExtra("photoPath", markerTag.toString());
-        }
-        else {
-            intent.putExtra("photoPath", "");
-        }
 
-        currentMarker = marker;
         startActivityForResult(intent, IMAGE_ACTIVITY);
         return true;
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == IMAGE_ACTIVITY && resultCode == Activity.RESULT_OK) {
-            //currentMarker.setTag(getIntent().getStringExtra("photoPath"));
-            currentMarker.setTag(data.getStringExtra("photoPath"));
-        }
         super.onActivityResult(requestCode, resultCode, data);
     }
 
